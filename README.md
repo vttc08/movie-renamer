@@ -1,16 +1,15 @@
-# Project Name
+# Movie Renamer
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Description
 
-A brief description of your project goes here.
+Rename simple subtitle files into user friendly names for Jellyfin. Also rename mkv files in folders with more than 1 mkv files into appropriate names for Jellyfin to recognize.
 
 ## Table of Contents
 
 - [Installation](#installation)
 - [Usage](#usage)
-- [Contributing](#contributing)
 - [License](#license)
 
 ## Installation
@@ -19,11 +18,19 @@ Instructions on how to install and set up your project.
 
 ## Usage
 
-Instructions on how to use your project and any relevant examples.
+### Install Dependencies
 
-## Contributing
+```shell
+python3 -m venv your-venv # optional
+```
+activate the virtual environment
+```shell
+pip install -r requirement.txt
+```
 
-Guidelines on how others can contribute to your project.
+### Windows (Input Based)
+
+Simply run start.bat and input the folder accordingly.
 
 ### Linux 
 
