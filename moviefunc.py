@@ -9,23 +9,26 @@ import filedate
 import shutil
 import threading
 from colorama import Fore, Back, Style
+import configparser
 
 # variables
 dir = input("Enter your directory you want to rename or change date (enter scan to refresh JF server). ")
 
 basename = os.path.basename(dir)
 
-small_name = "更兼容的电影版本"
-UHD_name = "4K-HDR 超高清蓝光电影"
-HD_name = "BluRay - 1080p 蓝光电影" 
-
-sub_list = ['en.srt','zh.srt','mul.srt']
-renamed_subs = ['.en','.zh.中文简体字幕','.zh.双语中英文字幕']
-
 dotenv.load_dotenv()
 movie_dir = os.getenv('MOVIE_PATH')
 
+# loading configuration file
+config = configparser.ConfigParser()
+config.read('conf.ini', encoding='utf-8')
+movie_conf = config['Movie Naming']
 
+small_name = movie_conf['small_name']
+UHD_name = movie_conf['UHD_name']
+HD_name = movie_conf['HD_name']
+sub_list = movie_conf['sub_list'].split(',')
+renamed_subs = movie_conf['renamed_subs'].split(',')
 
 def nfo_date():
     for file in os.listdir(dir):
