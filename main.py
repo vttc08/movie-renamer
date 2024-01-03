@@ -11,7 +11,7 @@ def twomkv():
 
 
 if __name__ == "__main__":
-    if dir == "scan":
+    if dir.startswith("/mnt/config"):
         refresh()
     else:
         os.chdir(dir)

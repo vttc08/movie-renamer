@@ -10,9 +10,16 @@ import shutil
 import threading
 from colorama import Fore, Back, Style
 import configparser
+import argparse
 
-# variables
-dir = input("Enter your directory you want to rename or change date (enter scan to refresh JF server). ")
+parser = argparse.ArgumentParser(description='Rename the movie directory and subtitle files.')
+parser.add_argument('directory', nargs='?', default='default', help='Directory to rename or change date')
+directory = parser.parse_args().directory
+
+if directory == 'default':
+    dir = input('Enter the directory to rename or change date: ')
+else:
+    dir = directory
 
 basename = os.path.basename(dir)
 
