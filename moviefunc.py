@@ -7,7 +7,6 @@ import time
 import dotenv
 import filedate
 import shutil
-import threading
 from colorama import Fore, Back, Style
 import configparser
 import argparse
@@ -140,27 +139,8 @@ def move(dir):
         
         # Loop through files in the directory
         for file in os.listdir(dir):
-            if file.endswith('.srt'):
-                print("Moving .srt file:", file)
-                shutil.move(file, movie_dir + basename)
-
-        for file in os.listdir(dir):
-            start_time = time.time()
-            try:
-                filesize = os.path.getsize(file) / (1024*1024*1024)
-            except FileNotFoundError:
-                continue
-            
-            thread = threading.Thread(target=shutil.move, args=(file, movie_dir + basename))
-            thread.start()
-
-            while thread.is_alive():
-                try:
-                    size_gb, elapsed_time = ismoved(file, movie_dir + basename + "\\" + file, start_time)
-                    print(f"{file}: {Fore.LIGHTRED_EX}{size_gb:.2f}{Style.RESET_ALL} GB of {Fore.LIGHTBLUE_EX}{filesize:.2f}{Style.RESET_ALL} GB | {Fore.GREEN}{size_gb/filesize*100:.4f}{Style.RESET_ALL} %   | Average speed is {Fore.CYAN}{size_gb/elapsed_time*1024:.2f}{Style.RESET_ALL} MB/s")
-                    time.sleep(0.8)
-                except:
-                    pass
+            print("Moving file:", file)
+            shutil.move(file, movie_dir + basename)
 
         # change to this program dir and remove the original dir
         os.chdir("..")
