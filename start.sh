@@ -1,4 +1,5 @@
 #!/bin/bash
+# script for olivetin that calls another python script
 source .env
 cd $WORKING_DIR
 # Activate the virtual environment
