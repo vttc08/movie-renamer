@@ -2,6 +2,7 @@
 fullpath=/mnt$1
 source /config/movie-rename-script/.env
 # source .env # if run locally
+touch -d "2 seconds ago" "$1"/* # set the modified time of the file to 2 seconds ago
 
 # If the file is not in /mnt/data, move it to /mnt/data/nzbget (temp dir for processing)
 # the script is execute in the POV of webtop where /data is /mnt/data on the host and /data/nzbget is /mnt/data/nzbget on the host
