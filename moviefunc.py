@@ -166,3 +166,5 @@ def move(dir):
         os.chdir("..")
         os.rmdir(dir)
 
+def newfunction():
+    print("new function has been added")
