@@ -1,4 +1,4 @@
-# Movie Renamer
+# Project Name
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -8,13 +8,9 @@ Rename simple subtitle files into user friendly names for Jellyfin. Also rename 
 
 ## Table of Contents
 
-- [Installation](#installation)
 - [Usage](#usage)
 - [License](#license)
 
-## Installation
-
-Instructions on how to install and set up your project.
 
 ## Usage
 
