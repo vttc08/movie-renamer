@@ -11,6 +11,7 @@ import threading
 from colorama import Fore, Back, Style
 import configparser
 import argparse
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser(description='Rename the movie directory and subtitle files.')
 parser.add_argument('directory', nargs='?', default='default', help='Directory to rename or change date')
@@ -107,21 +108,6 @@ def refresh():
     response = requests.post(url, headers=headers)
     print(response.status_code)  
 
-def ismoved(infile, outfile, start_time):
-    try:
-        filesize = os.path.getsize(infile)
-    except FileNotFoundError:
-        return False
-
-    while True:
-        if os.path.isfile(outfile):
-            size = os.path.getsize(outfile) / (1024*1024*1024)
-            current_time = time.time()
-            elapsed_time = current_time - start_time
-            return size, elapsed_time
-        else:
-            time.sleep(0.1)
-
 def move(dir):
     # if the basename dir is not in the format "Text (Year)" then return error
     if not basename.endswith(")"):
@@ -133,7 +119,6 @@ def move(dir):
         print("Folder already exists")
     else:
         os.mkdir(movie_dir + basename)
-        print("Folder created")
         
         # Print the list of files in the directory for debugging
         print("Files in directory:", os.listdir(dir))
@@ -144,27 +129,26 @@ def move(dir):
                 print("Moving .srt file:", file)
                 shutil.move(file, movie_dir + basename)
 
-        for file in os.listdir(dir):
-            start_time = time.time()
+        for file in os.listdir(dir): # only mkv files should be left
             try:
-                filesize = os.path.getsize(file) / (1024*1024*1024)
+                filesize = os.path.getsize(file)
+                print(f"Moving .mkv file: {file}")
             except FileNotFoundError:
                 continue
             
             thread = threading.Thread(target=shutil.move, args=(file, movie_dir + basename))
             thread.start()
+            with tqdm(total=filesize, mininterval=0.5,
+                            bar_format='{desc}{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{remaining}, ''{rate_fmt}{postfix}]',
+                            unit_scale=1, unit='iB', unit_divisor=1024, colour='cyan') as pbar:      
+                while thread.is_alive():
+                    try:    
+                        pbar.n = os.path.getsize(movie_dir + basename + "/" + file)
+                        pbar.refresh()
+                    except FileNotFoundError:
+                        pass
 
-            while thread.is_alive():
-                try:
-                    size_gb, elapsed_time = ismoved(file, movie_dir + basename + "\\" + file, start_time)
-                    print(f"{file}: {Fore.LIGHTRED_EX}{size_gb:.2f}{Style.RESET_ALL} GB of {Fore.LIGHTBLUE_EX}{filesize:.2f}{Style.RESET_ALL} GB | {Fore.GREEN}{size_gb/filesize*100:.4f}{Style.RESET_ALL} %   | Average speed is {Fore.CYAN}{size_gb/elapsed_time*1024:.2f}{Style.RESET_ALL} MB/s")
-                    time.sleep(0.8)
-                except:
-                    pass
 
         # change to this program dir and remove the original dir
         os.chdir("..")
         os.rmdir(dir)
-
-def newfunction():
-    print("new function has been added")

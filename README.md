@@ -27,6 +27,7 @@ pip install -r requirement.txt
 ### Windows (Input Based)
 
 Simply run start.bat and input the folder accordingly.
+The script will run in a loop, to stop, enter nothing or a non-existent folder to cause an erro then press Ctrl-C. If you did not meant to cause an error with the script, press any letters on keyboard and the loop will restart.
 
 ### Linux
 

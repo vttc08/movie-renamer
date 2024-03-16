@@ -3,13 +3,15 @@ setlocal EnableDelayedExpansion
 
 :loop
 python main.py
-echo "Press Ctrl-C to stop!"
+if errorlevel 1 (
+    echo "Error detected, restarting in 5 seconds..."
+    choice /C:abcdefghijklmnopqrstuvwxyz
+    if errorlevel 1 goto loop
+    if errorlevel 0 exit
 
+)
+
+cls
 goto loop
 
-:: set /p answer=Do you want to run the script again? (y/n)
-
-:: if /i "%answer%"=="y" goto :loop
-
-:: echo Goodbye!
-:: pause
+@ECHO off
