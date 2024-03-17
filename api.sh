@@ -4,6 +4,8 @@ fullpath=/mnt$1
 source /config/movie-rename-script/.env
 # source .env # if run locally
 
+# Create the JSON payload
+data=$(jq -n --arg path '"'"$fullpath"'"' '{"actionName": "Rename Movies", "arguments": [{"name": "path", "value": $path}]}')
 # If the file is not in /mnt/data, move it to /mnt/data/nzbget (temp dir for processing)
 # the script is execute in the POV of webtop where /data is /mnt/data on the host and /data/nzbget is /mnt/data/nzbget on the host
 if [[ "$fullpath" != /mnt/data* ]]; then
@@ -35,7 +37,7 @@ if [[ "$fullpath" != /mnt/data* ]]; then
     trap - EXIT
     # Olivetin processing of the files in nzbget folder
     new_path="/mnt/data/nzbget/$basename"
-    curl -X POST ''$OLIVETIN_URL'/api/StartAction' -d '{"actionName": "Rename Movies", "arguments": [{"name": "path", "value": "'"'$new_path'"'"}]}'
+    curl -X POST "$OLIVETIN_URL/api/StartAction" -d "$data"
 else
-    curl -X POST ''$OLIVETIN_URL'/api/StartAction' -d '{"actionName": "Rename Movies", "arguments": [{"name": "path", "value": "'"'$fullpath'"'"}]}'
+    curl -X POST "$OLIVETIN_URL/api/StartAction" -d "$data"
 fi
