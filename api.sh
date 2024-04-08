@@ -13,11 +13,17 @@ if [[ "$fullpath" != /mnt/data* ]]; then
     # define variables
     touch -d "2 seconds ago" "$1"/* # update the modified time since these files are not modified by nzbget
     basename=$(basename "$1")
-    rsync -a --progress --exclude 'progress*.txt' "$1" "/mnt/data/nzbget/" 
-    rm -rf "$1" # dangerous
+    set -e # exit script on rsync error
+    [ -f .fuse_hidden* ] && echo ".fusehidden found,\
+ script will be stopped" && sleep 3 && exit 1 # exit script on .fuse_hidden files in dir
+    rsync -a --progress --remove-source-files "$1" "/mnt/data/nzbget/" || sleep 5
+    # rsync error will be printed if an error occured
+    rmdir "$1" # only remove folder if it's empty
+    set +e
     # Olivetin processing of the files in nzbget folder, new JSON payload is created with the nzbget path
-    newpath="/mnt/data/nzbget/$basename"
-    newdata=$(jq -n --arg path '"'"$newpath"'"' '{"actionName": "Rename Movies", "arguments": [{"name": "path", "value": $path}]}')
+    nzbpath="/mnt/data/nzbget/$basename"
+    # Create payload for nzbpath
+    newdata=$(jq -n --arg newpath '"'"$nzbpath"'"' '{"actionName": "Rename Movies", "arguments": [{"name": "path", "value": $newpath}]}')
     curl -X POST "$OLIVETIN_URL/api/StartAction" -d "$newdata"
 else
     curl -X POST "$OLIVETIN_URL/api/StartAction" -d "$data"
