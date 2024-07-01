@@ -23,7 +23,13 @@ else:
 basename = os.path.basename(dir)
 
 dotenv.load_dotenv()
-movie_dir = os.getenv('MOVIE_PATH')
+movie_1 = os.getenv('MOVIE_PATH')
+movie_2 = os.getenv('MOVIE_PATH2')
+if dir.split('/')[2] == "data":
+    movie_dir = movie_1
+elif dir.split('/')[2] == "data2":
+    movie_dir = movie_2
+# movie_dir = os.getenv('MOVIE_PATH')
 
 # loading configuration file
 config = configparser.ConfigParser()

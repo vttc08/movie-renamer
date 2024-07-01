@@ -6,7 +6,7 @@ cd $WORKING_DIR
 source ./venv/bin/activate
 
 # Call the Python script with the user-defined argument
-python main.py "$1"
+sudo -u karis ./venv/bin/python main.py "$1"
 
 # Deactivate the virtual environment
 deactivate
