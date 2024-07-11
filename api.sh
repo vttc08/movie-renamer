@@ -5,7 +5,7 @@ source /config/movie-rename-script/.env
 # source .env # if run locally
 
 # Create the JSON payload if file is in /mnt/data
-data=$(jq -n --arg path '"'"$fullpath"'"' '{"actionName": "Rename Movies", "arguments": [{"name": "path", "value": $path}]}')
+data=$(jq -n --arg path '"'"$fullpath"'"' '{"actionId": "Rename Movies", "arguments": [{"name": "location", "value": $path}]}')
 
 # If the file is not in /mnt/data (eg. it's on another drive), move it to /mnt/data/nzbget (temp dir for processing)
 if [[ "$fullpath" != /mnt/data* ]]; then
@@ -23,7 +23,7 @@ if [[ "$fullpath" != /mnt/data* ]]; then
     # Olivetin processing of the files in nzbget folder, new JSON payload is created with the nzbget path
     nzbpath="/mnt/data/nzbget/$basename"
     # Create payload for nzbpath
-    newdata=$(jq -n --arg newpath '"'"$nzbpath"'"' '{"actionName": "Rename Movies", "arguments": [{"name": "path", "value": $newpath}]}')
+    newdata=$(jq -n --arg newpath '"'"$nzbpath"'"' '{"actionId": "Rename Movies", "arguments": [{"name": "location", "value": $newpath}]}')
     curl -X POST "$OLIVETIN_URL/api/StartAction" -d "$newdata"
 else
     curl -X POST "$OLIVETIN_URL/api/StartAction" -d "$data"
