@@ -1,9 +1,7 @@
 #!/bin/bash
 
 # FFProbe Command
-ffp='ffprobe *.mkv 2>&1>/dev/null | grep -E "Stream|title" | less'
-
-eval $ffp # need to press q to quit
+ffprobe *.mkv 2>&1>/dev/null | grep -E "Stream|title" | less
 
 ffmbase='ffmpeg -i *.mkv'
 
@@ -25,7 +23,7 @@ elif [[ $index == 'q' ]]; then
     exit 0
 fi
 
-fffull="$ffmbase $eno $zho"
+fffull="ffmpeg -i *.mkv $eno $zho"
 echo "Running command $fffull, press Ctrl-C to quit."
 sleep 1.5
-eval $fffull
+eval "ffmpeg -i *.mkv $eno $zho"
