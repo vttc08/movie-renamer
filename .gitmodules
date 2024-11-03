@@ -1,0 +1,3 @@
+[submodule "subcleaner-submodule"]
+	path = subcleaner
+	url = https://github.com/vttc08/subcleaner-submodule
