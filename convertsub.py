@@ -27,14 +27,9 @@ def convert_chinese(text):
     else:
         return text
     
-def remove_ads(file):
-    ''' Remove ads from the subtitle file using another python module subcleaner'''
-    raise NotImplementedError
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('file', nargs="+")
-    parser.add_argument('--remove-ads', action='store_true')
     args = parser.parse_args()
     for file in args.file:
         if file.endswith('.srt'):
@@ -46,7 +41,5 @@ if __name__ == "__main__":
                 for line in tqdm(lines, desc=f'Converting {filename}'):
                     converted_line = convert_chinese(line.strip()) + '\n'
                     outfile.write(converted_line)
-            if args.remove_ads:
-                remove_ads(file)
         else:
             pass
