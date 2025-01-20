@@ -16,7 +16,7 @@ def utffix(file):
         encoding = detection['encoding']
     if encoding != 'utf-8':
         with open(file, 'w', encoding='utf-8') as f:
-            f.write(content.decode(encoding))
+            f.write(content.decode(encoding, errors='replace'))
         
 def convert_chinese(text):
     """Convert Chinese text to Simplified Chinese using OpenCC"""
