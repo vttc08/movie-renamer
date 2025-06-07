@@ -25,10 +25,13 @@ basename = os.path.basename(dir)
 dotenv.load_dotenv()
 movie_1 = os.getenv('MOVIE_PATH')
 movie_2 = os.getenv('MOVIE_PATH2')
+movie_3 = os.getenv('MOVIE_PATH3')
 if dir.split('/')[2] == "data":
     movie_dir = movie_1
 elif dir.split('/')[2] == "data2":
     movie_dir = movie_2
+elif dir.split('/')[2] == "data3":
+    movie_dir = movie_3
 # movie_dir = os.getenv('MOVIE_PATH')
 
 # loading configuration file
