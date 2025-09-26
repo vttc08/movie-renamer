@@ -64,6 +64,12 @@ Use the mover script to move all the `.sh` files to the correct location.
 
 `Manual Right Click` - Manual action that create a marker file in `.drc` format with string `中英文字幕` as file name. This is used for MKVToolNix VNC container where it's difficult to copy and paste Chinese characters into it, it's difficult in the program to write Chinese on systems without Chinese input method. `.drc` is recognized by MKVToolNix so user can utilize the folder dialog box to copy Chinese characters. The marker file is removed by the `api.sh` script.
 
+#### Updated Userscript
+
+The updated workflow added functionality to automatically use Cloudflare Workers free tier AI model to run OCR and solve the image. The code is already developed on Cloudflare and is tracked in another repo in a submodule.
+
+The current project consists of `userscript.template.js` which is used to generate `userscript.js`, to be used for [Tampermonkey](https://addons.mozilla.org/en-CA/firefox/addon/tampermonkey/).
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
