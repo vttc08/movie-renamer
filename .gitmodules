@@ -1,3 +1,6 @@
 [submodule "subcleaner-submodule"]
 	path = subcleaner
 	url = https://github.com/vttc08/subcleaner-submodule
+[submodule "ocr-ai"]
+	path = ocr-ai
+	url = ssh://git@github.com/vttc08/ocr-ai
