@@ -26,7 +26,18 @@ def convert_chinese(text):
         return converter.convert(text)
     else:
         return text
-    
+
+def convert_file(file):
+    if file.endswith('.srt'):
+        utffix(file)
+        with open(file, 'r', encoding='utf-8') as infile:
+            lines = infile.readlines()
+        with open(file, 'w', encoding='utf-8') as outfile:
+            filename = file.split('/')[-1]
+            for line in tqdm(lines, desc=f'Converting {filename}'):
+                converted_line = convert_chinese(line.strip()) + '\n'
+                outfile.write(converted_line)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('file', nargs="+")
