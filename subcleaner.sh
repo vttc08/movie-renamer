@@ -4,6 +4,8 @@
 
 # This command is meant to be run on host.
 
+# Shortcut: Shift-Z
+
 # Expect 2 inputs, 1st is the directory, 2nd is the file name.
 
 dir="$1"
@@ -17,6 +19,7 @@ pytestbin="$src/subcleaner/venv/bin/pytest"
 subcleaner="$src/subcleaner/subcleaner.py"
 helper="$src/subcleaner/helper.py"
 convertsub="$src/convertsub.py"
+subprocessing="$src/subprocessing.py"
 zhregex="$src/subcleaner/regex_profiles/default/chinese.conf"
 help=$(cat <<EOF  
   q: quit
@@ -29,6 +32,7 @@ help=$(cat <<EOF
   g: automatic update of regex to Github  
   u: use this subtitle as a test case for false positive (use only after cleaning)
   f: fix traditional to simplified and UTF-8 encoding
+  ff: convert .ass to .srt, remove SDH and combined with the 'f' option
   h: help
 EOF
 )
@@ -38,7 +42,7 @@ $pybin $subcleaner "$file" "-n"
 while true 
 do
   curr_file=$(basename "$escf")
-  echo -e "‘\033[0;34m"
+  echo -e "\033[0;34m"
   read -p "File: $curr_file; Choose an option [Y|q|r|a|t|(x|c ...)|g|u|f|h], h for help: " option
   echo -e "\033[0m"
   case $option in
@@ -50,6 +54,7 @@ do
     t) cd $(dirname $subcleaner); $pytestbin -s --disable-warnings -q --tb=no testing.py; cd $src;;
     g) cd $(dirname $subcleaner); bash git.sh; cd $src;;
     f) $pybin2 $convertsub "$file";;
+    ff) $pybin2 $subprocessing "$file";;
     u) read -p "Rename this .srt file as (foreign|zh).(movie|tv).<genre>.year.name: " rename; if [[ ! -z $rename ]]; then rename="$rename.srt"; else rename=$curr_file; fi ; cp "$file" "$(dirname $subcleaner)/sub_tests/good/$rename"; echo "$rename has been added as a test case.";;
     *) $pybin $subcleaner "$file";;
   esac
