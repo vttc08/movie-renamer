@@ -4,7 +4,7 @@
 
 ## Description
 
-Rename simple subtitle files into user friendly names for Jellyfin. Also rename mkv files in folders with more than 1 mkv files into appropriate names for Jellyfin to recognize. Include additional features such as subtitle extraction, UTF-8 and traditional Chinese fix, subtitle synchronization, and subtitle cleanup.
+Rename simple subtitle files into user friendly names for Jellyfin. Also rename mkv files in folders with more than 1 mkv files into appropriate names for Jellyfin to recognize. Include additional features such as subtitle extraction, UTF-8 and traditional Chinese fix, subtitle synchronization, format conversion, SDH removal and subtitle cleanup.
 
 ## Table of Contents
 
@@ -54,7 +54,9 @@ Use the mover script to move all the `.sh` files to the correct location.
 
 `Ctrl-Shift-A` - `ffp.sh` - Calls the script that runs `ffprobe` and prompt user to enter track number to extract subtitles from `mkv` file if needed.
 
-`Ctrl-Shift-D` - `rmass.sh` - Calls the cleanup script that remove bad subtitles and unused `.ass` files.
+~~`Ctrl-Shift-D` - `rmass.sh` - Calls the cleanup script that remove bad subtitles and unused `.ass` files.~~ Deprecated, removing `.ass` files is now implemented in `api.sh` as final cleanup.
+
+`Ctrl-Shift-D` - `subprocessing.sh` - Calls the script that process `.ass` files, convert into `.srt`, remove SDH lines and fix traditional Chinese to simplified Chinese and UTF-8 encoding. It's a one-shot script that does common subtitle operation with default options.
 
 `Ctrl-Shift-Z` - `zht2s.sh` - Calls the script that send files and the directory as input over SSH which will process and overwrite the files with UTF-8 encoding and traditional Chinese to simplified Chinese conversion. OliveTin is not used because tracking the progress is needed.
 
