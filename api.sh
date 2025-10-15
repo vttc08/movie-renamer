@@ -1,6 +1,9 @@
 #!/bin/bash
 
 find "$1" -iname "*.drc" -delete # drc is a marker file which could be created at a previous step
+# Merged rmass.sh functionality to remove unwanted subtitle files
+find "$1" -name "*.ass" -delete
+find "$1" -name "*bad.srt" -delete
 fullpath=$1
 source /config/movie-rename-script/.env
 # source .env # if run locally

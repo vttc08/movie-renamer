@@ -5,8 +5,10 @@
 bind_dir=~/docker/webtop/config/movie-rename-script/ # the bind mount (host dir) of docker webtop
 # copy the .env file into the script dir
 cp .env $bind_dir/.env
-# copy the api.sh file into the script dir
-cp api.sh $bind_dir/script.sh
+# copy api, ffp, ffs, rmads, zht2s.sh into the script dir
+for file in api.sh ffp.sh ffs.sh rmads.sh zht2s.sh; do
+    cp $file $bind_dir/$file
+done
 
 # Cloudflare Worker userscript (to be added manually to firefox)
 export $(cat .env | xargs) && envsubst < userscript.template.js > userscript.js
