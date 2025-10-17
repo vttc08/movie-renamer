@@ -21,6 +21,7 @@ ffcommand="ffmpeg -i *.mkv"
 new_command="ffprobe -v quiet -print_format json -show_streams *.mkv"
 output=$($new_command | jq -r '[.streams[]
       | select(.codec_type == "subtitle")
+      | select(.codec_name == "subrip") 
       | {index, language: (.tags.language // null), title: (.tags.title // null)}]') # get subtitle streams and format to simplified json array
 
 check_json() {
