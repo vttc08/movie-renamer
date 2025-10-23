@@ -22,10 +22,10 @@ def convert_chinese(text):
     """Convert Chinese text to Simplified Chinese using OpenCC"""
     # Check if the line contains Chinese characters
     if re.search('[\u4e00-\u9fa5]', text):
-        # Convert the line to Simplified Chinese
-        return converter.convert(text)
-    else:
-        return text
+        text = converter.convert(text)
+        # Remove any stray non-BMP characters that OpenCC may still produce
+        return re.sub(r'[\U00010000-\U0010FFFF]', '', text)
+    return text
 
 def convert_file(file):
     if file.endswith('.srt'):
