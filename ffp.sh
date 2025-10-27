@@ -41,8 +41,8 @@ additional_check() {
     ### $1 is the language to check, eng or chi
     ### additional_check 'eng' -> stream index or ''
     case $1 in
-        eng) stream=$(echo "$output" | jq -r '[.[]|select(.language == "eng" and (.title // null | test("forced|sdh";"i") | not))] | .[0].index');; # pick the first non-forced, non-sdh stream
-        chi) stream=$(echo "$output" | jq -r '[.[]|select(.language == "chi" and  (.title // null | test("traditional";"i") | not))] | .[0].index');; # pick the first zh stream
+        eng) stream=$(echo "$output" | jq -r '[.[]|select(.language == "eng" and (.title | type == "string" and test("forced|sdh";"i") | not) or (.title == null))] | .[0].index');; # pick the first non-forced, non-sdh stream
+        chi) stream=$(echo "$output" | jq -r '[.[]|select(.language == "chi" and  (.title // null | test("traditional|cantonese";"i") | not))] | .[0].index');; # pick the first zh stream
         *) stream="";;
     esac
     echo $stream
