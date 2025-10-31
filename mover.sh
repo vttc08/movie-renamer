@@ -6,7 +6,7 @@ bind_dir=~/docker/webtop/config/movie-rename-script/ # the bind mount (host dir)
 # copy the .env file into the script dir
 cp .env $bind_dir/.env
 # copy api, ffp, ffs, rmads, zht2s.sh into the script dir
-for file in api.sh ffp.sh ffs.sh rmads.sh zht2s.sh subprocessing.sh; do
+for file in api.sh ffp.sh ffs.sh rmads.sh zht2s.sh subprocessing.sh mkvmerge_local.sh; do
     cp $file $bind_dir/$file
 done
 
