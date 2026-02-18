@@ -14,7 +14,7 @@ data=$(jq -n --arg path '"'"$fullpath"'"' '{"actionId": "Rename Movies", "argume
 # If the file is not in /mnt/data (eg. it's on another drive), move it to /mnt/data/nzbget (temp dir for processing)
 if [[ "$fullpath" != /mnt/data* ]]; then
     # Move the folder with progress into /mnt/data/nzbget
-    loc=$(printf "data\ndata2" | fzf --header "Choose a directory in /mnt: ") # fzf selectbox, require /usr/bin/fzf to be installed `sudo apt install fzf -y`
+    loc=$(printf "data\ndata2\ndata3" | fzf --header "Choose a directory in /mnt: ") # fzf selectbox, require /usr/bin/fzf to be installed `sudo apt install fzf -y`
     [[ ! -z $loc ]] || loc="data" # if destination is not set, defaults to /mnt/data
     touch -d "2 seconds ago" "$1"/* # update the modified time since these files are not modified by nzbget
     basename=$(basename "$1") # define variables
