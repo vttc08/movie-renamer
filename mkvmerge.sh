@@ -85,16 +85,17 @@ if (( en_count>1 || zh_count>1 || ${#audio_ids[@]}>1 )); then
     fzf --multi --header "Select audio tracks" \
         --bind 'ctrl-a:select-all,ctrl-d:deselect-all' \
     | awk -F' :: ' '{print $4}')
-  [[ -z $audio_track_idx ]] && exit 1
-
-  subtitle_track_idx=$(run_jq '[.tracks[]|select(.type=="subtitles" and (.codec|test("HDMV")|not))] |
+    echo $audio_track_idx
+    [[ -z $audio_track_idx ]] && exit 1
+    set +e
+    subtitle_track_idx=$(run_jq '[.tracks[]|select(.type=="subtitles" and (.codec|test("HDMV")|not))] |
     .[] | (.properties.language_ietf // .properties.language) + " :: " +
     .properties.track_name + " :: " + .codec + " :: " + (.id|tostring)' |
     fzf --multi --header "Select subtitle tracks" \
         --bind 'ctrl-a:select-all,ctrl-d:deselect-all' \
     | awk -F' :: ' '{print $4}')
+    set -e
 else
-  echo "Auto-selecting single audio/subtitle tracks"
   audio_track_idx="${audio_ids[*]}"
   en_ids=($(run_jq '[.tracks[]|select(.type=="subtitles" and ((.properties.language_ietf=="en") or (.properties.language=="eng")) and (.codec|test("HDMV")|not))]|.[].id'))
   zh_ids=($(run_jq '[.tracks[]|select(.type=="subtitles" and ((.properties.language_ietf=="zh") or (.properties.language=="chi")) and (.codec|test("HDMV")|not))]|.[].id'))
@@ -117,6 +118,8 @@ for idx in $audio_track_idx $subtitle_track_idx; do
   audio_subtitle_opts+=(--language "$idx:$lang" --track-name "$idx:$name")
   track_order_pre[1]+=",0:$idx"
 done
+
+[[ -z $subtitle_track_idx ]] && audio_subtitle_opts+=("--no-subtitles")
 
 disp_dim=$(get_track_property 0 "properties.display_dimensions")
 video_opts=(--language 0:und --display-dimensions 0:"$disp_dim")
@@ -178,3 +181,4 @@ if [[ "$dir" != /mnt/data* ]]; then
 else
     curl -X POST "$OLIVETIN_URL/api/StartAction" -d "$data"
 fi
+
