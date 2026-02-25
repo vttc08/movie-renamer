@@ -85,7 +85,6 @@ if (( en_count>1 || zh_count>1 || ${#audio_ids[@]}>1 )); then
     fzf --multi --header "Select audio tracks" \
         --bind 'ctrl-a:select-all,ctrl-d:deselect-all' \
     | awk -F' :: ' '{print $4}')
-    echo $audio_track_idx
     [[ -z $audio_track_idx ]] && exit 1
     set +e
     subtitle_track_idx=$(run_jq '[.tracks[]|select(.type=="subtitles" and (.codec|test("HDMV")|not))] |
@@ -99,13 +98,14 @@ else
   audio_track_idx="${audio_ids[*]}"
   en_ids=($(run_jq '[.tracks[]|select(.type=="subtitles" and ((.properties.language_ietf=="en") or (.properties.language=="eng")) and (.codec|test("HDMV")|not))]|.[].id'))
   zh_ids=($(run_jq '[.tracks[]|select(.type=="subtitles" and ((.properties.language_ietf=="zh") or (.properties.language=="chi")) and (.codec|test("HDMV")|not))]|.[].id'))
-  subtitle_track_idx="${en_ids[*]} ${zh_ids[*]}"
+  subtitle_track_idx="${en_ids[*]}${en_ids[*]:+ }${zh_ids[*]}"
 fi
 
 # --- Build command pieces ---------------------------------------
 ats=(--audio-tracks "$(join_by , $audio_track_idx)")
 sts=()
-[[ -n ${subtitle_track_idx:-} ]] && sts=(--subtitle-tracks "$(join_by , $subtitle_track_idx)")
+printf 'subtitle_track_idx=<%q>\n' "$subtitle_track_idx"
+[[ -n ${subtitle_track_idx} ]] && sts=(--subtitle-tracks "$(join_by , $subtitle_track_idx)")
 
 track_order_pre=(--track-order "0:0")
 audio_subtitle_opts=()
@@ -141,9 +141,9 @@ echo "---------------------------------------------------------------"
 # Snippet from api.sh
 if [[ "$dir" != /mnt/data* ]]; then
     # Move the folder with progress into /mnt/data/nzbget
-    loc=$(printf "data\ndata2\ndata3" | fzf --header "Choose a directory in /mnt: ") # fzf selectbox, require /usr/bin/fzf to be installed `sudo apt install fzf -y`
+    loc=$(curl -fsSL --request GET --url ${RADARR_URL}/api/v3/rootfolder   --header "x-api-key: ${RADARR_API_KEY}" | jq -r '.[] | select(.path|test("data")) | (.path | split("/") | .[1]) as $name | ($name + "\t" + $name + " - " + ((.freeSpace/1024/1024/1024|floor/1000)|tostring) + " TB") ' | fzf --header "Choose a destination directory in /mnt: " | awk -F '\t' '{ print $1 }') # same snippet from api.sh
     [[ ! -z $loc ]] || loc="data" # if destination is not set, defaults to /mnt/data
-    touch -d "2 seconds ago" "$1"/* # update the modified time since these files are not modified by nzbget
+    find "$dir" -mindepth 1 -maxdepth 1 -exec touch -d '2 seconds ago' -- {} + # update the modified time since these files are not modified by nzbget
 fi
 
 # --- Execute -----------------------------------------------------
@@ -152,33 +152,26 @@ if (( DRY_RUN )); then
   exit 0
 fi
 
-read -p "Click any key to proceed with muxing..." d
-"${cmd[@]}"
-echo "✅ Mux complete: $mkvout"
-
-trap "echo -e '\nProcess interrupted, nothing deleted.'; exit 1" SIGINT SIGTERM
-sleep $SLEEP
-rm "$mkvfile"
-
-# Callback
-if [[ "$dir" != /mnt/data* ]]; then
-    basename=$(basename "$1") # define variables
-    set -e # exit script on rsync error
-    [ -f .fuse_hidden* ] && echo ".fusehidden found,\
- script will be stopped" && sleep 3 && exit 1 # exit script on .fuse_hidden files in dir
-    sleep 1 # add sleep timer so user can change to another folder before rsync deletes it
-    rsync -a --progress --remove-source-files "$1" "/mnt/$loc/nzbget/" || sleep 5
-    # rsync error will be printed if an error occured
-    rmdir "$1" # only remove folder if it's empty
-    set +e # script won't fail with error
-    # Olivetin processing of the files in nzbget folder, new JSON payload is created with the nzbget path
-    nzbpath="/mnt/$loc/nzbget/$basename"
-    # Create payload for nzbpath
-    newdata=$(jq -n --arg newpath '"'"$nzbpath"'"' '{"actionId": "Rename Movies", "arguments": [{"name": "location", "value": $newpath}]}')
-    echo $nzbpath
-    echo $OLIVETIN_URL
-    curl -X POST "$OLIVETIN_URL/api/StartAction" -d "$newdata"
+# Option to queue the command in a file for later execution or execute immediately
+read -p "Click any key to queue the command, click y to execute immediately..." d
+if [[ $d == "y" ]]; then
+  "${cmd[@]}"
+  echo "✅ Mux complete: $mkvout"
+  trap "echo -e '\nProcess interrupted, nothing deleted.'; exit 1" SIGINT SIGTERM
+  rm "$mkvfile"
+  # python script callback
+  $this_script_dir/venv/bin/python $this_script_dir/main.py "$dir" $loc
+  sleep $SLEEP
 else
-    curl -X POST "$OLIVETIN_URL/api/StartAction" -d "$data"
+  echo "Command queued for later execution:"
+  queued_file="/srv/scripts/radarr/mkvmerge_queue_$(date +%s)"
+  printf '%q ' "${cmd[@]}" > "$queued_file.queue" # line 1
+  echo -e >> "$queued_file.queue" # separator
+  echo $dir >> "$queued_file.queue"
+  echo $mkvfile >> "$queued_file.queue"
+  echo $loc >> "$queued_file.queue"
+  # rm "$mkvfile" will need to be handled separately
 fi
 
+
+# Callback

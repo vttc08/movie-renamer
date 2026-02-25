@@ -1,4 +1,5 @@
 from moviefunc import *
+from moviefunc_radarr import query_queue
 import glob
 
 def onemkv():
@@ -20,6 +21,10 @@ if __name__ == "__main__":
             twomkv()
         if mkvcounter == 1:
             onemkv()
-        move(dir)
+        if dir.startswith("/mnt/nvme/share/scratch"):
+            query_queue(dir, dest_slug)
+        if dir.startswith("/mnt/data"):
+            # /mnt/data /mnt/data2 ... moves are instant
+            move(dir)
 
     
