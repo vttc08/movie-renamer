@@ -11,7 +11,9 @@ source /config/movie-rename-script/.env
 
 escdir=$(printf '%q' "$1")
 if [[ "$fullpath" != /mnt/data* ]]; then
-    loc=$(printf "data\ndata2\ndata3" | fzf --header "Choose a directory in /mnt: ") # fzf selectbox, require /usr/bin/fzf to be installed `sudo apt install fzf -y`
+    loc=$(curl -fsSL --request GET --url ${RADARR_URL}/api/v3/rootfolder   --header "x-api-key: ${RADARR_API_KEY}" | jq -r '.[] | select(.path|test("data")) | (.path | split("/") | .[1]) as $name | ($name + "\t" + $name + " - " + ((.freeSpace/1024/1024/1024|floor/1000)|tostring) + " TB") ' | fzf --header "Choose a destination directory in /mnt: " | awk -F '\t' '{ print $1 }')
+    # request root folders from Radarr, print the free spaces in TB, use fzf to select the destination directory, and extract it using awk
+    # fzf selectbox, require /usr/bin/fzf to be installed `sudo apt install fzf -y`
     [[ ! -z $loc ]] || loc="data" # if destination is not set, defaults to /mnt/data
 fi
 

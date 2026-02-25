@@ -85,7 +85,6 @@ if (( en_count>1 || zh_count>1 || ${#audio_ids[@]}>1 )); then
     fzf --multi --header "Select audio tracks" \
         --bind 'ctrl-a:select-all,ctrl-d:deselect-all' \
     | awk -F' :: ' '{print $4}')
-    echo $audio_track_idx
     [[ -z $audio_track_idx ]] && exit 1
     set +e
     subtitle_track_idx=$(run_jq '[.tracks[]|select(.type=="subtitles" and (.codec|test("HDMV")|not))] |
@@ -142,7 +141,7 @@ echo "---------------------------------------------------------------"
 # Snippet from api.sh
 if [[ "$dir" != /mnt/data* ]]; then
     # Move the folder with progress into /mnt/data/nzbget
-    loc=$(printf "data\ndata2\ndata3" | fzf --header "Choose a directory in /mnt: ") # fzf selectbox, require /usr/bin/fzf to be installed `sudo apt install fzf -y`
+    loc=$(curl -fsSL --request GET --url ${RADARR_URL}/api/v3/rootfolder   --header "x-api-key: ${RADARR_API_KEY}" | jq -r '.[] | select(.path|test("data")) | (.path | split("/") | .[1]) as $name | ($name + "\t" + $name + " - " + ((.freeSpace/1024/1024/1024|floor/1000)|tostring) + " TB") ' | fzf --header "Choose a destination directory in /mnt: " | awk -F '\t' '{ print $1 }') # same snippet from api.sh
     [[ ! -z $loc ]] || loc="data" # if destination is not set, defaults to /mnt/data
     find "$dir" -mindepth 1 -maxdepth 1 -exec touch -d '2 seconds ago' -- {} + # update the modified time since these files are not modified by nzbget
 fi
