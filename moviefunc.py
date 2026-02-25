@@ -10,15 +10,24 @@ import shutil
 from colorama import Fore, Back, Style
 import configparser
 import argparse
+import base64
 
 parser = argparse.ArgumentParser(description='Rename the movie directory and subtitle files.')
 parser.add_argument('directory', nargs='?', default='default', help='Directory to rename or change date')
+parser.add_argument('dest_slug', nargs='?', default='data', help='Destination slug for Radarr')
 directory = parser.parse_args().directory
+dest_slug = parser.parse_args().dest_slug
 
 if directory == 'default':
     dir = input('Enter the directory to rename or change date: ')
 else:
     dir = directory
+
+try:
+    # Accept base64 encoded directory for Bash script handling of edge cases
+    dir = base64.b64decode(dir).decode('utf-8')
+except Exception as e: # Normal strings will fail, so use original string
+    dir = dir
 
 basename = os.path.basename(dir)
 
