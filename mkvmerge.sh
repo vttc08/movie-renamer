@@ -144,6 +144,9 @@ if [[ "$dir" != /mnt/data* ]]; then
     loc=$(curl -fsSL --request GET --url ${RADARR_URL}/api/v3/rootfolder   --header "x-api-key: ${RADARR_API_KEY}" | jq -r '.[] | select(.path|test("data")) | (.path | split("/") | .[1]) as $name | ($name + "\t" + $name + " - " + ((.freeSpace/1024/1024/1024|floor/1000)|tostring) + " TB") ' | fzf --header "Choose a destination directory in /mnt: " | awk -F '\t' '{ print $1 }') # same snippet from api.sh
     [[ ! -z $loc ]] || loc="data" # if destination is not set, defaults to /mnt/data
     find "$dir" -mindepth 1 -maxdepth 1 -exec touch -d '2 seconds ago' -- {} + # update the modified time since these files are not modified by nzbget
+else
+    IFS='/' read -r -a dir_array <<< "$dir"
+    loc=${dir_array[2]}
 fi
 
 # --- Execute -----------------------------------------------------

@@ -11,6 +11,7 @@ L4 Destination slug for Radarr data/data2 (for main.py)
 """
 
 import os
+import glob
 import subprocess
 import base64
 from pathlib import Path
@@ -33,8 +34,11 @@ def process_mkvmerge(file_path: str) -> None:
         subprocess.run(f"{shell_command}", shell=True, timeout=1200) # do not check since the error code might be 1 for success
         clean_path = Path(dir)
         subprocess.run(["sudo", "chown", "-R", "1000:1001", str(clean_path)], check=True) # MKVToolNix Docker shell don't follow UID GID
-        os.remove(mkvfile) # cleanup MKV file after merge
-        os.remove(file_path) # cleanup .queue task
+        if len(glob.glob(str(clean_path)+"/"+"*.mkv")) > 1:
+            os.remove(mkvfile) # cleanup MKV file after merge
+            os.remove(file_path) # cleanup .queue task
+        else:
+            raise Exception("MKVMerge never occured!")
         # run python script directly
         b64_dir = base64.b64encode(dir.encode('utf-8')).decode('utf-8')
         subprocess.run(f"{CURRENT_PATH}/venv/bin/python {CURRENT_PATH}/main.py {b64_dir} {dest_slug}", shell=True, check=True)
