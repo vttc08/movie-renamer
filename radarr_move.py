@@ -4,6 +4,7 @@ import time
 
 def start_move(yaml_data: dict):
     # mock yaml data for now
+    yaml_data["monitored"] = False
     arr_request(f'/api/v3/movie/{yaml_data["id"]}?moveFiles=true', method="PUT", json=yaml_data)
     status = None
     while status != 'completed':
