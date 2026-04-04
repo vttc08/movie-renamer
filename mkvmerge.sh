@@ -122,7 +122,8 @@ done
 [[ -z $subtitle_track_idx ]] && audio_subtitle_opts+=("--no-subtitles")
 
 disp_dim=$(get_track_property 0 "properties.display_dimensions")
-video_opts=(--language 0:und --display-dimensions 0:"$disp_dim")
+video_opts=(--language 0:und)
+[[ -n $disp_dim && $disp_dim != "null" ]] && video_opts+=(--display-dimensions 0:"$disp_dim")
 track_order="${track_order_pre[*]}${track_order_extra}"
 
 # --- Compose final command --------------------------------------
