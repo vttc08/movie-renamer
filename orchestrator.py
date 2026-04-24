@@ -16,6 +16,7 @@ import subprocess
 import base64
 from pathlib import Path
 import yaml
+import time
 from radarr_move import move_movie
 
 SCRIPTS_FOLDER = "/srv/scripts/radarr"
@@ -63,3 +64,4 @@ if __name__ == "__main__":
             print(f"Moving movie to {yaml_data['path']} with ID {yaml_data['id']}")
             move_movie(yaml_data)
         os.remove(file_path) # cleanup .yaml task after processing
+    time.sleep(10) # allow another systemd service to run its tasks before stopping
