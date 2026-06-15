@@ -142,12 +142,17 @@ echo "---------------------------------------------------------------"
 # Snippet from api.sh
 if [[ "$dir" != /mnt/data* ]]; then
     # Move the folder with progress into /mnt/data/nzbget
-    loc=$(df -BG --output=target,avail /mnt/data* 2>/dev/null \
-      | awk 'NR>1 && $1 ~ /^\/mnt\/data/ { split($1,p,"/"); name=p[3]; avail=$2; gsub(/G$/,"",avail); print name "\t" name " - " int(avail/1000) " TB" }' \
-      | sort -u \
-      | fzf --header "Choose a destination directory in /mnt: " \
-      | awk -F '\t' '{ print $1 }') # same snippet as api.sh
-    [[ ! -z $loc ]] || loc="data" # if destination is not set, defaults to /mnt/data
+  loc=$(df -BG --output=target,avail /mnt/data* 2>/dev/null \
+        | awk 'NR>1 && $1 ~ /^\/mnt\/data/ {
+            split($1,p,"/");
+            name=p[3];
+            avail=$2;
+            gsub(/G$/,"",avail);
+            printf "%s\t%s - %.3f TB\n", name, name, avail/1000
+        }' \
+        | sort -u \
+        | fzf --header "Choose a destination directory in /mnt: " \
+        | awk -F '\t' '{ print $1 }')
     find "$dir" -mindepth 1 -maxdepth 1 -exec touch -d '2 seconds ago' -- {} + # update the modified time since these files are not modified by nzbget
 else
     IFS='/' read -r -a dir_array <<< "$dir"
