@@ -12,10 +12,16 @@ source /config/movie-rename-script/.env
 escdir=$(printf '%q' "$1")
 if [[ "$fullpath" != /mnt/data* ]]; then
     loc=$(df -BG --output=target,avail /mnt/data* 2>/dev/null \
-      | awk 'NR>1 && $1 ~ /^\/mnt\/data/ { split($1,p,"/"); name=p[3]; avail=$2; gsub(/G$/,"",avail); print name "\t" name " - " int(avail/1000) " TB" }' \
-      | sort -u \
-      | fzf --header "Choose a destination directory in /mnt: " \
-      | awk -F '\t' '{ print $1 }')
+          | awk 'NR>1 && $1 ~ /^\/mnt\/data/ {
+              split($1,p,"/");
+              name=p[3];
+              avail=$2;
+              gsub(/G$/,"",avail);
+              printf "%s\t%s - %.3f TB\n", name, name, avail/1000
+          }' \
+          | sort -u \
+          | fzf --header "Choose a destination directory in /mnt: " \
+          | awk -F '\t' '{ print $1 }')
     # use local df output, print free spaces in TB, use fzf to select destination, and extract it using awk
     # fzf selectbox, require /usr/bin/fzf to be installed `sudo apt install fzf -y`
     [[ ! -z $loc ]] || loc="data" # if destination is not set, defaults to /mnt/data
