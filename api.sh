@@ -11,12 +11,21 @@ source /config/movie-rename-script/.env
 
 escdir=$(printf '%q' "$1")
 if [[ "$fullpath" != /mnt/data* ]]; then
-    loc=$(curl -fsSL --request GET --url ${RADARR_URL}/api/v3/rootfolder   --header "x-api-key: ${RADARR_API_KEY}" | jq -r '.[] | select(.path|test("data")) | (.path | split("/") | .[1]) as $name | ($name + "\t" + $name + " - " + ((.freeSpace/1024/1024/1024|floor/1000)|tostring) + " TB") ' | fzf --header "Choose a destination directory in /mnt: " | awk -F '\t' '{ print $1 }')
-    # request root folders from Radarr, print the free spaces in TB, use fzf to select the destination directory, and extract it using awk
+    loc=$(df -BG --output=target,avail /mnt/data* 2>/dev/null \
+          | awk 'NR>1 && $1 ~ /^\/mnt\/data/ {
+              split($1,p,"/");
+              name=p[3];
+              avail=$2;
+              gsub(/G$/,"",avail);
+              printf "%s\t%s - %.3f TB\n", name, name, avail/1000
+          }' \
+          | sort -u \
+          | fzf --header "Choose a destination directory in /mnt: " \
+          | awk -F '\t' '{ print $1 }')
+    # use local df output, print free spaces in TB, use fzf to select destination, and extract it using awk
     # fzf selectbox, require /usr/bin/fzf to be installed `sudo apt install fzf -y`
     [[ ! -z $loc ]] || loc="data" # if destination is not set, defaults to /mnt/data
 fi
 
 ssh mediaserver  \
     "cd ~/projects/movie-renamer; ./venv/bin/python main.py "$b64" "$loc";"
-
