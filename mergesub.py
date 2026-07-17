@@ -12,6 +12,8 @@ from typing import Iterable
 import pysubs2
 
 
+MIN_TRANSITION_RUN_MS = 500
+MAX_INPUT_SIZE_BYTES = 20 * 1024 * 1024
 _BR_TAG = re.compile(r"<br\s*/?>", re.IGNORECASE)
 _INTERNAL_LINE_BREAK = re.compile(r"(?:\\[Nn]|\r\n?|\n)+")
 _WHITESPACE = re.compile(r"\s+")
@@ -63,7 +65,27 @@ def _load_cues(path: Path, source_index: int) -> list[SourceCue]:
                 cue_index=cue_index,
             )
         )
+
+    if not cues:
+        raise ValueError(f"Subtitle contains no positive-duration cues: {path}")
     return cues
+
+
+def _validate_input_paths(paths: Iterable[Path]) -> None:
+    """Validate every input before reading content from any of them."""
+
+    for path in paths:
+        if not path.is_file():
+            raise FileNotFoundError(f"Subtitle file does not exist: {path}")
+        if path.suffix.lower() != ".srt":
+            raise ValueError(f"Only SRT inputs are supported: {path}")
+
+        size = path.stat().st_size
+        if size > MAX_INPUT_SIZE_BYTES:
+            limit_mib = MAX_INPUT_SIZE_BYTES // (1024 * 1024)
+            raise ValueError(
+                f"Subtitle exceeds the {limit_mib} MiB input limit: {path}"
+            )
 
 
 def merge_cues(cues: Iterable[SourceCue]) -> pysubs2.SSAFile:
@@ -115,6 +137,68 @@ def merge_cues(cues: Iterable[SourceCue]) -> pysubs2.SSAFile:
     return merged
 
 
+def _event_lines(event: pysubs2.SSAEvent) -> set[str]:
+    return {line for line in event.text.split("\\N") if line}
+
+
+def remove_short_transition_runs(
+    subtitles: pysubs2.SSAFile,
+    threshold_ms: int = MIN_TRANSITION_RUN_MS,
+) -> pysubs2.SSAFile:
+    """Remove repeated-line transition runs shorter than ``threshold_ms``."""
+
+    events = subtitles.events
+    if not events:
+        return subtitles
+
+    lines = [_event_lines(event) for event in events]
+    is_transition_fragment = [False] * len(events)
+
+    for index, event in enumerate(events):
+        if event.duration >= threshold_ms:
+            continue
+
+        shares_with_previous = (
+            index > 0
+            and events[index - 1].end == event.start
+            and bool(lines[index - 1] & lines[index])
+        )
+        shares_with_next = (
+            index + 1 < len(events)
+            and event.end == events[index + 1].start
+            and bool(lines[index] & lines[index + 1])
+        )
+        is_transition_fragment[index] = shares_with_previous or shares_with_next
+
+    remove_indexes: set[int] = set()
+    index = 0
+    while index < len(events):
+        if not is_transition_fragment[index]:
+            index += 1
+            continue
+
+        run_start = index
+        run_end = index
+        while (
+            run_end + 1 < len(events)
+            and is_transition_fragment[run_end + 1]
+            and events[run_end].end == events[run_end + 1].start
+        ):
+            run_end += 1
+
+        run_duration = events[run_end].end - events[run_start].start
+        if run_duration < threshold_ms:
+            remove_indexes.update(range(run_start, run_end + 1))
+        index = run_end + 1
+
+    subtitles.events = [
+        event
+        for event_index, event in enumerate(events)
+        if event_index not in remove_indexes
+    ]
+    return subtitles
+
+
 def merge_subtitles(
     first_subtitle: str | Path,
     second_subtitle: str | Path,
@@ -126,11 +210,7 @@ def merge_subtitles(
     second_path = Path(second_subtitle)
     output_path = Path(output) if output is not None else first_path.parent / "mul.srt"
 
-    for path in (first_path, second_path):
-        if not path.is_file():
-            raise FileNotFoundError(f"Subtitle file does not exist: {path}")
-        if path.suffix.lower() != ".srt":
-            raise ValueError(f"Only SRT inputs are supported: {path}")
+    _validate_input_paths((first_path, second_path))
 
     output_resolved = output_path.resolve()
     if output_resolved in (first_path.resolve(), second_path.resolve()):
@@ -140,7 +220,7 @@ def merge_subtitles(
         *_load_cues(first_path, source_index=0),
         *_load_cues(second_path, source_index=1),
     ]
-    merged = merge_cues(cues)
+    merged = remove_short_transition_runs(merge_cues(cues))
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     merged.save(output_path, encoding="utf-8", format_="srt")

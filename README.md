@@ -58,7 +58,7 @@ Use the mover script to move all the `.sh` files to the correct location.
 
 `Ctrl-Shift-D` - `subprocessing.sh` - Calls the script that process `.ass` files, convert into `.srt`, remove SDH lines and fix traditional Chinese to simplified Chinese and UTF-8 encoding. It's a one-shot script that does common subtitle operation with default options.
 
-`Ctrl-Shift-M` - `mergesub.sh` - Select exactly two `.srt` files and preprocess the subtitle first by removing line breaks and merge 2 subtitle together so the first shows on the first line while the second show on second line to create multi-language subtitle mul.srt
+`Ctrl-Shift-M` - `mergesub.sh` - Select exactly two `.srt` files and preprocess the subtitle first by removing line breaks and merge 2 subtitle together so the first shows on the first line while the second show on second line to create multi-language subtitle `mul.srt`. To reduce flicker from slightly misaligned subtitle tracks, repeated-line transition fragments are removed when their whole contiguous run is shorter than 500 ms. Longer transition runs and standalone short subtitles are preserved. Both inputs must contain valid cues and are limited to 20 MiB each before parsing.
 
 `Ctrl-Shift-Z` - `zht2s.sh` - Calls the script that send files and the directory as input over SSH which will process and overwrite the files with UTF-8 encoding and traditional Chinese to simplified Chinese conversion. OliveTin is not used because tracking the progress is needed.
 
