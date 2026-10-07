@@ -22,30 +22,21 @@ new_command="ffprobe -v quiet -print_format json -show_streams *.mkv"
 output=$($new_command | jq -r '[.streams[]
       | select(.codec_type == "subtitle")
       | select(.codec_name == "subrip") 
-      | {index, language: (.tags.language // null), title: (.tags.title // null)}]') # get subtitle streams and format to simplified json array
+      | {index, language: (.tags.language // null), title: (.tags.title // null),
+         forced: (.disposition.forced // 0), hearing_impaired: (.disposition.hearing_impaired // 0)}]') # get subtitle streams and format to simplified json array
 
 check_json() {
     ### $1 is the json content to be piped to jq
     ### $2 is the language to check, eng or chi
     ### check_json "$output" 'eng' -> stream index or ''
-    length=$(echo "$1" | jq  --arg LANG "$2" '[.[]|select(.language == $LANG) ] | length')
-    case $length in
-        '') stream="''";; # no stream found
-        1) stream=$(echo "$1" | jq -r --arg LANG "$2" '[.[]|select(.language == $LANG)] | .[].index');; # one stream found
-        *) stream=$(additional_check $2);; # multiple streams found, pick the first one
-    esac
-    echo $stream
-}
-
-additional_check() {
-    ### $1 is the language to check, eng or chi
-    ### additional_check 'eng' -> stream index or ''
-    case $1 in
-        eng) stream=$(echo "$output" | jq -r '[.[]|select(.language == "eng" and (.title | type == "string" and test("forced|sdh";"i") | not) or (.title == null))] | .[0].index');; # pick the first non-forced, non-sdh stream
-        chi) stream=$(echo "$output" | jq -r '[.[]|select(.language == "chi" and  (.title // null | test("traditional|cantonese";"i") | not))] | .[0].index');; # pick the first zh stream
-        *) stream="";;
-    esac
-    echo $stream
+    echo "$1" | jq -r --arg LANG "$2" '
+        [.[] | select(.language == $LANG)
+         | select(if $LANG == "eng" then
+             ((.title // "" | test("forced|sdh"; "i")) | not)
+             and (.forced == 0) and (.hearing_impaired == 0)
+           elif $LANG == "chi" then
+             ((.title // "" | test("traditional|cantonese"; "i")) | not)
+           else true end)] | .[0].index // empty'
 }
 
 submapbuilder() {
