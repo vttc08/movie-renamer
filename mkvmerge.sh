@@ -33,6 +33,30 @@ join_by() { local IFS="$1"; shift; echo "$*"; }
 quote() { printf '%q' "$1"; }
 subtitle_file_idx=1
 
+is_missing_value() {
+  local value="${1:-}"
+  [[ -z $value || $value == "null" || $value == "und" ]]
+}
+
+lang_label() {
+  case "$1" in
+    en) echo "English" ;;
+    zh) echo "Chinese" ;;
+    mul) echo "Chinese & English" ;;
+    *) echo "Unknown" ;;
+  esac
+}
+
+default_track_name() {
+  local type="$1" lang="$2" idx="$3"
+  case "$type" in
+    audio) echo "Audio - $(lang_label "$lang")" ;;
+    subtitles) echo "Subtitle - $(lang_label "$lang")" ;;
+    video) echo "Video Track $idx" ;;
+    *) echo "Track $idx" ;;
+  esac
+}
+
 render_subtitle() {
   local file="${1:-}" lang base
   [[ -z $file ]] && { echo "render_subtitle: no input file" >&2; return 1; }
@@ -111,10 +135,13 @@ track_order_pre=(--track-order "0:0")
 audio_subtitle_opts=()
 
 for idx in $audio_track_idx $subtitle_track_idx; do
+  track_type=$(get_track_property "$idx" "type")
   lang=$(get_track_property "$idx" "properties.language_ietf")
-  [[ -z $lang || $lang == "null" ]] && lang=$(get_track_property "$idx" "properties.language")
+  is_missing_value "$lang" && lang=$(get_track_property "$idx" "properties.language")
   lang=${lang_idx_map[$lang]:-$lang}
+  is_missing_value "$lang" && lang="und"
   name=$(get_track_property "$idx" "properties.track_name")
+  is_missing_value "$name" && name=$(default_track_name "$track_type" "$lang" "$idx")
   audio_subtitle_opts+=(--language "$idx:$lang" --track-name "$idx:$name")
   track_order_pre[1]+=",0:$idx"
 done
@@ -122,7 +149,11 @@ done
 [[ -z $subtitle_track_idx ]] && audio_subtitle_opts+=("--no-subtitles")
 
 disp_dim=$(get_track_property 0 "properties.display_dimensions")
-video_opts=(--language 0:und)
+video_lang=$(get_track_property 0 "properties.language_ietf")
+is_missing_value "$video_lang" && video_lang=$(get_track_property 0 "properties.language")
+video_lang=${lang_idx_map[$video_lang]:-$video_lang}
+is_missing_value "$video_lang" && video_lang="und"
+video_opts=(--language 0:"$video_lang")
 [[ -n $disp_dim && $disp_dim != "null" ]] && video_opts+=(--display-dimensions 0:"$disp_dim")
 track_order="${track_order_pre[*]}${track_order_extra}"
 
